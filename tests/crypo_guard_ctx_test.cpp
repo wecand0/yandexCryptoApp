@@ -197,7 +197,7 @@ TEST(CryptoGuardExtra, ConsistentEncryption) {
 TEST(CryptoGuardExtra, LargeDataPerformance) {
     CryptoGuardCtx crypto;
 
-    // Создаем данные размером 5MB
+    // Создаем данные размером 1MB
     std::string large_data;
     large_data.reserve(5 * 1024 * 1024);
     for (int i = 0; i < 5 * 1024 * 1024; ++i) {

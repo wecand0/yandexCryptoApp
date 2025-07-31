@@ -15,19 +15,27 @@ struct AesCipherParams {
     static constexpr size_t IV_SIZE{16};           // AES block size (IV length)
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();  // Cipher algorithm
 
+    //I use EVP_EncryptInit_ex2 from https://docs.openssl.org/master/man3/EVP_EncryptInit/#examples, this var is not necessary
     // int encrypt{};                              // 1 for encryption, 0 for decryption
     std::array<unsigned char, KEY_SIZE> key{};  // Encryption key
     std::array<unsigned char, IV_SIZE> iv{};    // Initialization vector
 };
 
-struct OpenSslContextDeleter {
+struct OpenSslCipherContextDeleter {
     void operator()(EVP_CIPHER_CTX *ctx) const noexcept {
         if (ctx)
             EVP_CIPHER_CTX_free(ctx);
     }
 };
+struct OpenSslMDContextDeleter {
+    void operator()(EVP_MD_CTX *ctx) const noexcept {
+        if (ctx)
+            EVP_MD_CTX_free(ctx);
+    }
+};
 
-using openssl_context_ptr = std::unique_ptr<EVP_CIPHER_CTX, OpenSslContextDeleter>;
+using openssl_context_cipher_ptr = std::unique_ptr<EVP_CIPHER_CTX, OpenSslCipherContextDeleter>;
+using openssl_context_md_ptr = std::unique_ptr<EVP_MD_CTX, OpenSslMDContextDeleter>;
 
 class CryptoGuardCtx::Impl {
 public:
@@ -56,7 +64,7 @@ void CryptoGuardCtx::Impl::Encrypt(std::iostream &inStream, std::iostream &outSt
 
     const auto aesCipherParams = CreateCipherParamsFromPassword(password);
 
-    openssl_context_ptr ctx(EVP_CIPHER_CTX_new());
+    openssl_context_cipher_ptr ctx(EVP_CIPHER_CTX_new());
 
     // Инициализация шифрования AES-256-CBC
     // TODO use std::out_ptr
@@ -99,11 +107,7 @@ void CryptoGuardCtx::Impl::Decrypt(std::iostream &inStream, std::iostream &outSt
     // Создание параметров шифрования из пароля и соли
     const auto params = CreateCipherParamsFromPassword(password);
 
-    auto ctx_deleter = [](EVP_CIPHER_CTX *ctx) {
-        if (ctx)
-            EVP_CIPHER_CTX_free(ctx);
-    };
-    std::unique_ptr<EVP_CIPHER_CTX, decltype(ctx_deleter)> ctx(EVP_CIPHER_CTX_new(), ctx_deleter);
+    openssl_context_cipher_ptr ctx(EVP_CIPHER_CTX_new());
     if (!ctx) {
         throw std::runtime_error("Failed to create cipher context: " + GetOpenSSLError());
     }
@@ -145,15 +149,7 @@ void CryptoGuardCtx::Impl::Decrypt(std::iostream &inStream, std::iostream &outSt
 std::string CryptoGuardCtx::Impl::CalculateChecksum(std::iostream &inStream) const {
     CheckStreamState(inStream);
 
-    std::unique_ptr<EVP_MD_CTX, decltype([](EVP_MD_CTX *ctx) {
-                        if (ctx)
-                            EVP_MD_CTX_free(ctx);
-                    })>
-        ctx;
-
-    EVP_MD_CTX *raw_ctx = EVP_MD_CTX_new();
-    ctx.reset(raw_ctx);
-
+    openssl_context_md_ptr ctx(EVP_MD_CTX_new());
     if (!ctx) {
         throw std::runtime_error("Failed to create hash context: " + GetOpenSSLError());
     }

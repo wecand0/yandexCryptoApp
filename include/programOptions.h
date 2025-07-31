@@ -2,9 +2,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <format>
 #include <print>
-#include <string>
 #include <unordered_map>
 
 namespace CryptoGuard {
@@ -24,15 +22,13 @@ public:
 
     enum class COMMAND_TYPE { ENCRYPT, DECRYPT, CHECKSUM, HELP, UNKNOWN };
 
-    bool IsHelpRequested() const;
-    COMMAND_TYPE GetCommand() const;
-    std::string GetInputPath() const;
-    std::string GetOutputPath() const;
-    std::string GetPassword() const;
+    bool IsHelpRequested() const noexcept;
+    COMMAND_TYPE GetCommand() const noexcept;
+    std::string_view GetInputPath() const noexcept;
+    std::string_view GetOutputPath() const noexcept;
+    std::string_view GetPassword() const noexcept;
 
 private:
-
-
     // Маппинг строковых команд на enum
     const std::unordered_map<std::string_view, COMMAND_TYPE> commandMapping_ = {{"encrypt", COMMAND_TYPE::ENCRYPT},
                                                                                 {"decrypt", COMMAND_TYPE::DECRYPT},
@@ -45,14 +41,11 @@ private:
     bool isHelp_{};
     COMMAND_TYPE command_ = COMMAND_TYPE::UNKNOWN;
 
-    std::string inputFile_;
-    std::string outputFile_;
-    std::string password_;
+    std::string_view inputFile_;
+    std::string_view outputFile_;
+    std::string_view password_;
 
     po::variables_map vm_;
     po::options_description desc_;
-
-
-
 };
 }  // namespace CryptoGuard

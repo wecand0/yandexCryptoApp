@@ -1,13 +1,10 @@
-
 #include "programOptions.h"
 
 #include <boost/program_options.hpp>
-#include <print>
-#include <stdexcept>
 
-template<>
+template <>
 struct std::formatter<boost::program_options::options_description> : std::formatter<std::string> {
-    auto format(const boost::program_options::options_description& desc, std::format_context& ctx) const {
+    auto format(const boost::program_options::options_description &desc, std::format_context &ctx) const {
         std::ostringstream oss;
         oss << desc;
         return std::formatter<std::string>::format(oss.str(), ctx);
@@ -113,14 +110,14 @@ void ProgramOptions::ValidateOptions() const {
     }
 }
 
-bool ProgramOptions::IsHelpRequested() const { return isHelp_; }
+bool ProgramOptions::IsHelpRequested() const noexcept { return isHelp_; }
 
-ProgramOptions::COMMAND_TYPE ProgramOptions::GetCommand() const { return command_; }
+ProgramOptions::COMMAND_TYPE ProgramOptions::GetCommand() const noexcept { return command_; }
 
-std::string ProgramOptions::GetInputPath() const { return inputFile_; }
+std::string_view ProgramOptions::GetInputPath() const noexcept { return inputFile_; }
 
-std::string ProgramOptions::GetOutputPath() const { return outputFile_; }
+std::string_view ProgramOptions::GetOutputPath() const noexcept { return outputFile_; }
 
-std::string ProgramOptions::GetPassword() const { return password_; }
+std::string_view ProgramOptions::GetPassword() const noexcept { return password_; }
 
 }  // namespace CryptoGuard

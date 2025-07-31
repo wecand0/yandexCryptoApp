@@ -1,49 +1,46 @@
 #include "programOptions.h"
 
-#include <print>
 #include <fstream>
-
 
 using namespace CryptoGuard;
 
-int main(const int argc, char* argv[]) {
+int main(const int argc, char *argv[]) {
     try {
         const auto options = std::make_unique<ProgramOptions>();
-        options->Parse(argc,argv);
+        options->Parse(argc, argv);
 
         // Если запрашивается help, выходим
         if (options->IsHelpRequested()) {
             return 0;
         }
 
-
         // Выполнение команды
         switch (options->GetCommand()) {
-            case ProgramOptions::COMMAND_TYPE::ENCRYPT: {
-                std::println("File encrypted successfully!");
-                break;
-            }
-
-            case ProgramOptions::COMMAND_TYPE::DECRYPT: {
-                std::println("File decrypted successfully!");
-                break;
-            }
-
-            case ProgramOptions::COMMAND_TYPE::CHECKSUM: {
-                std::println("SHA-256: {}", "checksum");
-                break;
-            }
-
-            case ProgramOptions::COMMAND_TYPE::HELP:
-                // Уже обработано выше
-                break;
-
-            case ProgramOptions::COMMAND_TYPE::UNKNOWN:
-                std::println(stderr, "Error: Unknown command");
-                return 1;
+        case ProgramOptions::COMMAND_TYPE::ENCRYPT: {
+            std::println("File encrypted successfully!");
+            break;
         }
 
-    } catch (const std::exception& e) {
+        case ProgramOptions::COMMAND_TYPE::DECRYPT: {
+            std::println("File decrypted successfully!");
+            break;
+        }
+
+        case ProgramOptions::COMMAND_TYPE::CHECKSUM: {
+            std::println("SHA-256: {}", "checksum");
+            break;
+        }
+
+        case ProgramOptions::COMMAND_TYPE::HELP:
+            // Уже обработано выше
+            break;
+
+        case ProgramOptions::COMMAND_TYPE::UNKNOWN:
+            std::println(stderr, "Error: Unknown command");
+            return 1;
+        }
+
+    } catch (const std::exception &e) {
         std::println(stderr, "Error: {}", e.what());
         return 1;
     } catch (...) {

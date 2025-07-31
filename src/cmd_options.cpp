@@ -129,10 +129,10 @@ bool ProgramOptions::IsHelpRequested() const noexcept { return isHelp_; }
 
 ProgramOptions::COMMAND_TYPE ProgramOptions::GetCommand() const noexcept { return command_; }
 
-std::string_view ProgramOptions::GetInputPath() const noexcept { return inputFile_; }
+std::string ProgramOptions::GetInputPath() const noexcept { return inputFile_; }
 
-std::string_view ProgramOptions::GetOutputPath() const noexcept { return outputFile_; }
+std::string ProgramOptions::GetOutputPath() const noexcept { return outputFile_; }
 
-std::string_view ProgramOptions::GetPassword() const noexcept { return password_; }
+std::string ProgramOptions::GetPassword() const noexcept { return password_; }
 
 }  // namespace CryptoGuard

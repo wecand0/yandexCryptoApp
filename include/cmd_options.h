@@ -24,9 +24,9 @@ public:
 
     bool IsHelpRequested() const noexcept;
     COMMAND_TYPE GetCommand() const noexcept;
-    std::string_view GetInputPath() const noexcept;
-    std::string_view GetOutputPath() const noexcept;
-    std::string_view GetPassword() const noexcept;
+    std::string GetInputPath() const noexcept;
+    std::string GetOutputPath() const noexcept;
+    std::string GetPassword() const noexcept;
 
 private:
     // Маппинг строковых команд на enum
@@ -42,9 +42,9 @@ private:
     bool isHelp_{};
     COMMAND_TYPE command_ = COMMAND_TYPE::UNKNOWN;
 
-    std::string_view inputFile_;
-    std::string_view outputFile_;
-    std::string_view password_;
+    std::string inputFile_;
+    std::string outputFile_;
+    std::string password_;
 
     po::variables_map vm_;
     po::options_description desc_;

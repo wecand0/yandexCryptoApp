@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "programOptions.h"
+#include "cmd_options.h"
 
 using namespace CryptoGuard;
 
@@ -12,8 +12,8 @@ std::vector<char *> CreateArgv(const std::vector<std::string> &args) {
     storage = args;  // копируем строки
     ptrs.clear();
 
-    for (auto &arg : storage) {
-        ptrs.push_back(const_cast<char *>(arg.c_str()));
+    for (const auto &arg : storage) {
+        ptrs.emplace_back(const_cast<char *>(arg.c_str()));
     }
 
     return ptrs;
@@ -23,13 +23,13 @@ std::vector<char *> CreateArgv(const std::vector<std::string> &args) {
 TEST(ProgramOptions, ValidEncryptCommand) {
     ProgramOptions options;
     auto argv = CreateArgv({"cryptoguard", "--command", "encrypt", "--input", "/path/to/input.txt", "--output",
-                            "/path/to/output.enc", "--password", "strongpassword123"});
+                            "/path/to/output.enc", "--password", "strongYandexPasswordQWERTY"});
 
     EXPECT_NO_THROW(options.Parse(argv.size(), argv.data()));
     EXPECT_EQ(options.GetCommand(), ProgramOptions::COMMAND_TYPE::ENCRYPT);
     EXPECT_EQ(options.GetInputPath(), "/path/to/input.txt");
     EXPECT_EQ(options.GetOutputPath(), "/path/to/output.enc");
-    EXPECT_EQ(options.GetPassword(), "strongpassword123");
+    EXPECT_EQ(options.GetPassword(), "strongYandexPasswordQWERTY");
     EXPECT_FALSE(options.IsHelpRequested());
 }
 
@@ -147,31 +147,38 @@ TEST(ProgramOptions, PasswordWithSpecialChars) {
 }
 
 // Тест 14: Пути с пробелами
-TEST(ProgramOptions, PathsWithSpaces) {
+TEST(ProgramOptions, PathsNoSpaces) {
+    ProgramOptions options;
+    auto argv = CreateArgv({"cryptoguard", "--command", "checksum", "--input", "/path/nospaces/mydocument.txt"});
+
+    EXPECT_NO_THROW(options.Parse(argv.size(), argv.data()));
+    EXPECT_EQ(options.GetInputPath(), "/path/nospaces/mydocument.txt");
+}
+// Тест 15: Пути с пробелами должны вызывать ошибку
+TEST(ProgramOptions, PathsWithSpacesThrowError) {
     ProgramOptions options;
     auto argv = CreateArgv({"cryptoguard", "--command", "checksum", "--input", "/path/with spaces/my document.txt"});
 
-    EXPECT_NO_THROW(options.Parse(argv.size(), argv.data()));
-    EXPECT_EQ(options.GetInputPath(), "/path/with spaces/my document.txt");
+    EXPECT_THROW(options.Parse(argv.size(), argv.data()), std::invalid_argument);
 }
 
-// Тест 15: Все валидные команды
+// Тест 16: Все валидные команды
 TEST(ProgramOptions, AllValidCommands) {
     struct TestCase {
         std::string command;
         ProgramOptions::COMMAND_TYPE expected;
     };
 
-    std::vector<TestCase> cases = {{"encrypt", ProgramOptions::COMMAND_TYPE::ENCRYPT},
-                                   {"decrypt", ProgramOptions::COMMAND_TYPE::DECRYPT},
-                                   {"checksum", ProgramOptions::COMMAND_TYPE::CHECKSUM}};
+    const std::vector<TestCase> cases = {{"encrypt", ProgramOptions::COMMAND_TYPE::ENCRYPT},
+                                         {"decrypt", ProgramOptions::COMMAND_TYPE::DECRYPT},
+                                         {"checksum", ProgramOptions::COMMAND_TYPE::CHECKSUM}};
 
-    for (const auto &test : cases) {
+    for (const auto &[command, expected] : cases) {
         ProgramOptions options;
-        auto argv = CreateArgv({"cryptoguard", "--command", test.command, "--input", "test.txt", "--output",
-                                "output.txt", "--password", "password"});
+        auto argv = CreateArgv({"cryptoguard", "--command", command, "--input", "test.txt", "--output", "output.txt",
+                                "--password", "password"});
 
         EXPECT_NO_THROW(options.Parse(argv.size(), argv.data()));
-        EXPECT_EQ(options.GetCommand(), test.expected);
+        EXPECT_EQ(options.GetCommand(), expected);
     }
 }

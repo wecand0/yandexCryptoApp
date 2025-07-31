@@ -1,4 +1,5 @@
-#include "programOptions.h"
+#include "cmd_options.h"
+#include "crypto_guard_ctx.h"
 
 #include <fstream>
 
@@ -6,6 +7,20 @@ using namespace CryptoGuard;
 
 int main(const int argc, char *argv[]) {
     try {
+
+        auto ctx = std::make_unique<CryptoGuardCtx>();
+
+        std::stringstream input("hello");
+        std::stringstream output, o;
+
+        ctx->EncryptFile(input, output, "12345");
+
+        std::println("{}", output.str());
+
+        ctx->DecryptFile(output, o, "12345");
+
+        std::println("{}", o.str());
+
         const auto options = std::make_unique<ProgramOptions>();
         options->Parse(argc, argv);
 

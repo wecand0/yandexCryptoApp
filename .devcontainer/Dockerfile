@@ -8,10 +8,6 @@ RUN apt-get install --fix-missing -y python3 python3-pip pipx git less vim sudo 
 RUN ln -fs /usr/bin/g++-15 /usr/bin/g++
 RUN ln -fs /usr/bin/gcc-15 /usr/bin/gcc
 
-ARG USER=dev
-ARG USER_GID=1001
-ARG USER_UID=1001
-
 # Create a non-root user 'dev'
 RUN useradd -ms /bin/bash dev \
     && echo "dev ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/dev \

@@ -197,17 +197,31 @@ AesCipherParams CryptoGuardCtx::Impl::CreateCipherParamsFromPassword(const std::
     }
     return params;
 }
-void CryptoGuardCtx::Impl::CheckStreamState(const std::iostream &input) {
-    if (!input.good()) {
-        throw std::runtime_error("Input stream is not in good state");
+void CryptoGuardCtx::Impl::CheckStreamState(const std::iostream &stream) {
+    if (stream.bad()) {
+        throw std::runtime_error("Stream error: irrecoverable read/write error (badbit set)");
+    }
+    if (stream.fail()) {
+        throw std::runtime_error("Stream error: logical I/O operation failed (failbit set)");
+    }
+    if (stream.eof()) {
+        throw std::runtime_error("Stream error: unexpected EOF encountered (eofbit set)");
+    }
+    if (!stream.good()) {
+        throw std::runtime_error("Stream is not in a good state");
     }
 }
 void CryptoGuardCtx::Impl::CheckStreamState(const std::iostream &input, const std::iostream &output) {
-    if (!input.good()) {
-        throw std::runtime_error("Input stream is not in good state");
+    try {
+        CheckStreamState(input);
+    } catch (const std::exception &e) {
+        throw std::runtime_error(std::string("Input stream check failed: ") + e.what());
     }
-    if (!output.good()) {
-        throw std::runtime_error("Output stream is not in good state");
+
+    try {
+        CheckStreamState(output);
+    } catch (const std::exception &e) {
+        throw std::runtime_error(std::string("Output stream check failed: ") + e.what());
     }
 }
 std::string CryptoGuardCtx::Impl::GetOpenSSLError() {

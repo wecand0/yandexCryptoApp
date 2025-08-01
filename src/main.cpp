@@ -7,22 +7,69 @@ using namespace CryptoGuard;
 
 struct IfStreamDeleter {
     void operator()(std::ifstream *stream) const noexcept {
-        if (stream && stream->is_open())
-            stream->close();
-        delete stream;
+        if (stream) {
+            if (stream->is_open()) {
+                stream->close();
+            }
+            delete stream;
+        }
     }
 };
 struct OfStreamDeleter {
     void operator()(std::ofstream *stream) const noexcept {
-        if (stream && stream->is_open())
-            stream->close();
-        delete stream;
+        if (stream) {
+            if (stream->is_open()) {
+                stream->close();
+            }
+            delete stream;
+        }
     }
 };
 
+template <typename FileStream, typename Deleter>
+std::unique_ptr<FileStream, Deleter> createFileStream(std::string &&path) {
+    auto stream = std::unique_ptr<FileStream, Deleter>(new FileStream(std::move(path), std::ios::binary));
+    if (!stream->is_open()) {
+        throw std::runtime_error("Cannot open file: " + path);
+    }
+
+    return stream;
+}
+
+int handleEncrypt(std::unique_ptr<CryptoGuardCtx> &&crypter, std::unique_ptr<ProgramOptions> &&options) {
+    const auto inputFile = createFileStream<std::ifstream, IfStreamDeleter>(options->GetInputPath());
+    const auto outputFile = createFileStream<std::ofstream, OfStreamDeleter>(options->GetOutputPath());
+
+    std::iostream inputStream(inputFile->rdbuf());
+    std::iostream outputStream(outputFile->rdbuf());
+
+    crypter->EncryptFile(inputStream, outputStream, options->GetPassword());
+    std::println("File encrypted successfully!");
+    return 0;
+}
+int handleDecrypt(std::unique_ptr<CryptoGuardCtx> &&crypter, std::unique_ptr<ProgramOptions> &&options) {
+    const auto inputFile = createFileStream<std::ifstream, IfStreamDeleter>(options->GetInputPath());
+    const auto outputFile = createFileStream<std::ofstream, OfStreamDeleter>(options->GetOutputPath());
+
+    std::iostream inputStream(inputFile->rdbuf());
+    std::iostream outputStream(outputFile->rdbuf());
+
+    crypter->DecryptFile(inputStream, outputStream, options->GetPassword());
+    std::println("File decrypted successfully!");
+    return 0;
+}
+
+int handleChecksum(std::unique_ptr<CryptoGuardCtx> &&crypter, std::unique_ptr<ProgramOptions> &&options) {
+    const auto inputFile = createFileStream<std::ifstream, IfStreamDeleter>(options->GetInputPath());
+
+    std::iostream inputStream(inputFile->rdbuf());
+
+    std::println("SHA-256: {}", crypter->CalculateChecksum(inputStream));
+    return 0;
+}
+
 int main(const int argc, char *argv[]) {
     try {
-
         auto options = std::make_unique<ProgramOptions>();
         options->Parse(argc, argv);
 
@@ -33,65 +80,23 @@ int main(const int argc, char *argv[]) {
 
         auto crypter = std::make_unique<CryptoGuardCtx>();
 
+        // Перемещаем crypter, options, объекты больше не нужны после обработки
         switch (options->GetCommand()) {
-        case ProgramOptions::COMMAND_TYPE::ENCRYPT: {
-            std::unique_ptr<std::ifstream, IfStreamDeleter> inputFile(new std::ifstream(options->GetInputPath()));
-            if (!inputFile->is_open()) {
-                throw std::runtime_error("Cannot open input file");
-            }
-
-            std::unique_ptr<std::ofstream, OfStreamDeleter> outputFile(new std::ofstream(options->GetOutputPath()));
-            if (!outputFile->is_open()) {
-                throw std::runtime_error("Cannot open output file");
-            }
-
-            std::iostream input_stream(inputFile->rdbuf());
-            std::iostream output_stream(outputFile->rdbuf());
-
-            crypter->EncryptFile(input_stream, output_stream, options->GetPassword());
-
-            std::println("File encrypted successfully!");
-            break;
-        }
-
-        case ProgramOptions::COMMAND_TYPE::DECRYPT: {
-            std::unique_ptr<std::ifstream, IfStreamDeleter> inputFile(
-                (std::make_unique<std::ifstream>(options->GetInputPath()).get()));
-            if (!inputFile->is_open()) {
-                throw std::runtime_error("Cannot open input file");
-            }
-
-            std::unique_ptr<std::ofstream, OfStreamDeleter> outputFile(new std::ofstream(options->GetOutputPath()));
-            if (!outputFile->is_open()) {
-                throw std::runtime_error("Cannot open output file");
-            }
-
-            std::iostream input_stream(inputFile->rdbuf());
-            std::iostream output_stream(outputFile->rdbuf());
-            crypter->DecryptFile(input_stream, output_stream, options->GetPassword());
-            std::println("File decrypted successfully!");
-            break;
-        }
-
-        case ProgramOptions::COMMAND_TYPE::CHECKSUM: {
-            std::unique_ptr<std::ifstream, IfStreamDeleter> inputFile(new std::ifstream(options->GetInputPath()));
-            if (!inputFile->is_open()) {
-                throw std::runtime_error("Cannot open input file");
-            }
-            std::iostream input_stream(inputFile->rdbuf());
-            std::println("SHA-256: {}", crypter->CalculateChecksum(input_stream));
-            break;
-        }
-
+        case ProgramOptions::COMMAND_TYPE::ENCRYPT:
+            return handleEncrypt(std::move(crypter), std::move(options));
+        case ProgramOptions::COMMAND_TYPE::DECRYPT:
+            return handleDecrypt(std::move(crypter), std::move(options));
+        case ProgramOptions::COMMAND_TYPE::CHECKSUM:
+            return handleChecksum(std::move(crypter), std::move(options));
         case ProgramOptions::COMMAND_TYPE::HELP:
             // Уже обработано выше
-            break;
-
+            return 0;
         case ProgramOptions::COMMAND_TYPE::UNKNOWN:
             std::println(stderr, "Error: Unknown command");
             return 1;
-        default: {
-        }
+        default:
+            std::println(stderr, "Error: Unhandled command type");
+            return 1;
         }
 
     } catch (const std::exception &e) {

@@ -239,10 +239,6 @@ CryptoGuardCtx::CryptoGuardCtx() : pImpl_(std::make_unique<Impl>()) {}
 
 CryptoGuardCtx::~CryptoGuardCtx() = default;
 
-CryptoGuardCtx::CryptoGuardCtx(CryptoGuardCtx &&) noexcept = default;
-
-CryptoGuardCtx &CryptoGuardCtx::operator=(CryptoGuardCtx &&) noexcept = default;
-
 void CryptoGuardCtx::EncryptFile(std::iostream &inStream, std::iostream &outStream,
                                  const std::string_view password) const {
     pImpl_->Encrypt(inStream, outStream, password);

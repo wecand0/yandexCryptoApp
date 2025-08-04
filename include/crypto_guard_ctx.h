@@ -13,8 +13,8 @@ public:
     CryptoGuardCtx(const CryptoGuardCtx &) = delete;
     CryptoGuardCtx &operator=(const CryptoGuardCtx &) = delete;
 
-    CryptoGuardCtx(CryptoGuardCtx &&) noexcept;
-    CryptoGuardCtx &operator=(CryptoGuardCtx &&) noexcept;
+    CryptoGuardCtx(CryptoGuardCtx &&) = delete;
+    CryptoGuardCtx &operator=(CryptoGuardCtx &&) = delete;
 
     // API
     void EncryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) const;

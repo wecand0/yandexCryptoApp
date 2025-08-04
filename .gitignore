@@ -1,7 +1,7 @@
 *.cache/
 CMakeUserPresets.json
 *build/
-.idea
+*.idea/local
 .idea/*
 cmake-build-debug
 cmake-build-release

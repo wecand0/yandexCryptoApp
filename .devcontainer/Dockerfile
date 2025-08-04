@@ -1,8 +1,8 @@
 FROM ubuntu@sha256:79efa276fdefa2ee3911db29b0608f8c0561c347ec3f4d4139980d43b168d991
 
 # Update the package database and install required tools
-RUN apt update
-RUN apt install -y python3 python3-pip pipx git less vim sudo cmake make g++-15 libjemalloc-dev clang-format clangd-19
+RUN apt-get update
+RUN apt-get install --fix-missing -y python3 python3-pip pipx git less vim sudo cmake make g++-15 libjemalloc-dev clang-format clangd-19
 
 # Update  gcc/g++ version to the latest ones
 RUN ln -fs /usr/bin/g++-15 /usr/bin/g++
